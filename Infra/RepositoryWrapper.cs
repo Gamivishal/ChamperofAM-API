@@ -130,24 +130,94 @@ namespace Champerof.Infra
                 var recordsTotal = list.Count;
 
                 if (!string.IsNullOrEmpty(searchValue))
+                {
+
+                }
                     list = list.Where(x => JsonConvert.SerializeObject(x)
                         .ToLower().Contains(searchValue.ToLower())).ToList();
 
+                //           if (!string.IsNullOrEmpty(sortColumn))
+                //           {
+                //               list = sortColumnDir.ToLower() == "asc"
+                //            ? list.OrderBy(x =>
+                //               {   
+                //    var prop = x.GetType().GetProperty(sortColumn, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                //    var val = prop?.GetValue(x, null);
+                //    return val is string str ? str.ToLower() : val;
+                //}).ToList()
+                //: list.OrderByDescending(x =>
+                //{
+                //    var prop = x.GetType().GetProperty(sortColumn, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                //    var val = prop?.GetValue(x, null);
+                //    return val is string str ? str.ToLower() : val;
+                //}).ToList();
+                //           }
                 if (!string.IsNullOrEmpty(sortColumn))
                 {
-                    list = sortColumnDir.ToLower() == "asc"
-     ? list.OrderBy(x =>
-     {
-         var prop = x.GetType().GetProperty(sortColumn, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-         var val = prop?.GetValue(x, null);
-         return val is string str ? str.ToLower() : val;
-     }).ToList()
-     : list.OrderByDescending(x =>
-     {
-         var prop = x.GetType().GetProperty(sortColumn, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-         var val = prop?.GetValue(x, null);
-         return val is string str ? str.ToLower() : val;
-     }).ToList();
+                    if (sortColumn.Equals("invoiceNumber", StringComparison.OrdinalIgnoreCase))
+                    {
+                        list = sortColumnDir.ToLower() == "asc"
+                            ? list.OrderBy(x =>
+                            {
+                                var invoiceNumber = x.GetType()
+                                    .GetProperty("InvoiceNumber", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)?
+                                    .GetValue(x)?.ToString();
+
+                                if (string.IsNullOrEmpty(invoiceNumber))
+                                    return (0, 0);
+
+                                var parts = invoiceNumber.Split('/');
+
+                                int year = 0;
+                                int number = 0;
+
+                                if (parts.Length >= 3)
+                                {
+                                    int.TryParse(parts[2], out year);
+                                    int.TryParse(parts[1], out number);
+                                }
+
+                                return (year, number);
+                            }).ToList()
+                            : list.OrderByDescending(x =>
+                            {
+                                var invoiceNumber = x.GetType()
+                                    .GetProperty("InvoiceNumber", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)?
+                                    .GetValue(x)?.ToString();
+
+                                if (string.IsNullOrEmpty(invoiceNumber))
+                                    return (0, 0);
+
+                                var parts = invoiceNumber.Split('/');
+
+                                int year = 0;
+                                int number = 0;
+
+                                if (parts.Length >= 3)
+                                {
+                                    int.TryParse(parts[2], out year);
+                                    int.TryParse(parts[1], out number);
+                                }
+
+                                return (year, number);
+                            }).ToList();
+                    }
+                    else
+                    {
+                        list = sortColumnDir.ToLower() == "asc"
+                            ? list.OrderBy(x =>
+                            {
+                                var prop = x.GetType().GetProperty(sortColumn, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                                var val = prop?.GetValue(x, null);
+                                return val is string str ? str.ToLower() : val;
+                            }).ToList()
+                            : list.OrderByDescending(x =>
+                            {
+                                var prop = x.GetType().GetProperty(sortColumn, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                                var val = prop?.GetValue(x, null);
+                                return val is string str ? str.ToLower() : val;
+                            }).ToList();
+                    }
                 }
 
                 //var pagedData = list.Skip(start).Take(length).ToList();
